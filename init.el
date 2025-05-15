@@ -1,54 +1,66 @@
-(global-display-line-numbers-mode) ; set line numbering
+;;; init.el --- Emacs config
 
-;; set up the melpa archives
+;; Basic UI settings
+(setq inhibit-startup-message t
+      inhibit-startup-screen t
+      make-backup-files nil
+      auto-save-default nil
+      create-lockfiles nil
+      scroll-conservatively 100
+      display-line-numbers-type 'relative)
+
+(add-to-list 'default-frame-alist '(font . "Source Code Pro-12"))
+(set-face-attribute 'default nil :font "Source Code Pro-12")
+
+(global-display-line-numbers-mode)
+(show-paren-mode 1)
+(global-font-lock-mode 1)
+(global-auto-revert-mode 1)
+
+;; Default window size
+(add-to-list 'default-frame-alist '(width . 80))
+(add-to-list 'default-frame-alist '(height . 25))
+
+;; Theme
+(load-theme 'misterioso)
+
+;; Package system setup
 (require 'package)
-(add-to-list 'package-archives '("melpa" . "https://stable.melpa.org/packages/") t)
+(setq package-enable-at-startup nil)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
 
-;; bind sbcl to emacs
-(setq inferior-lisp-program "/usr/bin/sbcl")
+;; Bootstrap use-package
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(require 'use-package)
+(setq use-package-always-ensure t)
 
-;; add opacity to the emacs bg for emacs gui client; activate when needed
-;(set-frame-parameter nil 'alpha-background 70)
+;; Go mode
+(use-package go-mode
+  :mode "\\.go\\'")
 
-;(add-to-list 'default-frame-alist '(alpha-background . 70))
-
+;; Global company mode
 (add-hook 'after-init-hook 'global-company-mode)
 
-
-;; Disable the background color in Emacs to keep terminal transparency
+;; Terminal transparency handling
 (add-hook 'terminal-init-xterm-hook
           (lambda ()
             (unless (display-graphic-p)
               (set-face-background 'default "unspecified-bg" (selected-frame)))))
 
-;;trying to stop the intro screen
-(setq inhibit-startup-screen t)
+;; Lisp interpreter (SBCL)
+(setq inferior-lisp-program "/usr/bin/sbcl")
 
-;; function to enable no window mode have access to global clipboard
+;; Clipboard sync in non-GUI Emacs
 (defun update-killring-from-xclip ()
   (interactive)
   (let ((output (shell-command-to-string "xclip -o -selection clipboard")))
     (kill-new output)
     (message "Pasted from clipboard")))
-
 (global-set-key (kbd "C-c C-u") 'update-killring-from-xclip)
 
-;; font and font-size i am very comfortable in.
-;; downside is i have not gotten it to work in no window mode
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(global-display-line-numbers-mode t)
- '(package-selected-packages
-   '(zig-mode go-mode kotlin-mode zen-mode smartparens slime rust-mode magit company)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(default ((t (:family "Source Code Pro" :foundry "ADBO" :slant normal :weight semi-bold :height 113 :width normal)))))
-
-(load-theme 'misterioso)
+;; GUI transparency
+(set-frame-parameter nil 'alpha-background 78)
+(add-to-list 'default-frame-alist '(alpha-background . 78))
